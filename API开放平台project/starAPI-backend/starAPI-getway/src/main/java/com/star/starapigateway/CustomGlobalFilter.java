@@ -1,7 +1,14 @@
 package com.star.starapigateway;
 
+import com.star.starApiCommon.model.entity.InterfaceInfo;
+import com.star.starApiCommon.model.entity.User;
+import com.star.starApiCommon.service.InnerInterfaceInfoService;
+import com.star.starApiCommon.service.InnerUserInterfaceInfoService;
+import com.star.starApiCommon.service.InnerUserService;
 import com.star.starapiclientsdk.utils.SignUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -10,6 +17,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -28,6 +36,14 @@ import java.util.List;
 @Component
 public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
+    @DubboReference
+    private InnerUserService innerUserService;
+
+    @DubboReference
+    private InnerInterfaceInfoService innerInterfaceInfoService;
+
+    @DubboReference
+    private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
 
     private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1");
     private static final String INTERFACE_HOST = "http://localhost:8123";
@@ -36,9 +52,13 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         // info print
+
+        String path = INTERFACE_HOST + request.getPath().value();
+        String method = request.getMethod().toString();
+
         log.info("custom global filter");
         log.info("request ID: " + request.getId());
-        log.info("request Path: " + request.getPath().value());
+        log.info("request Path: " + path);
         log.info("request Method: " + request.getMethod());
         log.info("request Params: " + request.getQueryParams());
         String sourceAddress = request.getLocalAddress().getHostString();
@@ -58,32 +78,42 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String timestamp = headers.getFirst("timestamp");
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
-        // todo 实际情况应该是去数据库中查是否已分配给用户
-        if (!"star".equals(accessKey)){
+        User invokeUser = null;
+        try {
+            invokeUser = innerUserService.getInvokeUser(accessKey);
+        } catch (Exception e) {
+            log.error("getInvokeUser error", e);
+        }
+        if (invokeUser == null) {
             return handleNoAuth(response);
         }
         if (Long.parseLong(nonce) > 10000L) {
             return handleNoAuth(response);
         }
-//         todo 时间和当前时间不能超过 5 分钟
+        // current time should not more than 5 mins
         Long currentTime = System.currentTimeMillis() / 1000;
-        final Long FIVE_MIN = 60 * 5L;
-        if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MIN) {
+        final Long FIVE_MINUTES = 60 * 5L;
+        if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
             return handleNoAuth(response);
         }
-//         todo 实际情况中是从数据库中查出 secretKey
-        String serverSign = SignUtils.genSign(body, "1234");
-        if (!sign.equals(serverSign)) {
-            throw new RuntimeException("FORBIDDEN");
+        // 实际情况中是从数据库中查出 secretKey
+        String secretKey = invokeUser.getSecretKey();
+        String serverSign = SignUtils.genSign(body, secretKey);
+        if (sign == null || !sign.equals(serverSign)) {
+            return handleNoAuth(response);
         }
-
-
-        // todo look for aksk in backend
-
-//        Mono<Void> filter = chain.filter(exchange);
-
-        // response log
-        return handleResponse(exchange, chain);
+        // 4. 请求的模拟接口是否存在，以及请求方法是否匹配
+        InterfaceInfo interfaceInfo = null;
+        try {
+            interfaceInfo = innerInterfaceInfoService.getInterfaceInfo(path, method);
+        } catch (Exception e) {
+            log.error("getInterfaceInfo error", e);
+        }
+        if (interfaceInfo == null) {
+            return handleNoAuth(response);
+        }
+        // todo 是否还有调用次数
+        return handleResponse(exchange, chain, interfaceInfo.getId(), invokeUser.getId());
 
     }
 
@@ -111,7 +141,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
      * @param chain
      * @return
      */
-    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain){
+    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain, long interfaceInfoId, long userId){
         try {
             ServerHttpResponse originalResponse = exchange.getResponse();
             // 缓存数据的工厂
@@ -130,6 +160,11 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                             // 往返回值里写数据
                             // 拼接字符串
                             return super.writeWith(fluxBody.map(dataBuffer -> {
+                                        try {
+                                            innerUserInterfaceInfoService.invokeCount(interfaceInfoId, userId);
+                                        } catch (Exception e) {
+                                            log.error("invokeCount error", e);
+                                        }
                                         byte[] content = new byte[dataBuffer.readableByteCount()];
                                         dataBuffer.read(content);
                                         DataBufferUtils.release(dataBuffer);//释放掉内存

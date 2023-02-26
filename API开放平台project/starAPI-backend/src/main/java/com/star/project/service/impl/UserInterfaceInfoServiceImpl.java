@@ -1,14 +1,12 @@
 package com.star.project.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.project.common.ErrorCode;
 import com.star.project.exception.BusinessException;
-import com.star.project.model.entity.UserInterfaceInfo;
-import com.star.project.service.UserInterfaceInfoService;
 import com.star.project.mapper.UserInterfaceInfoMapper;
-import org.apache.commons.lang3.StringUtils;
+import com.star.project.service.UserInterfaceInfoService;
+import com.star.starApiCommon.model.entity.UserInterfaceInfo;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,7 +16,7 @@ import org.springframework.stereotype.Service;
 */
 @Service
 public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoMapper, UserInterfaceInfo>
-    implements UserInterfaceInfoService{
+    implements UserInterfaceInfoService {
 
     @Override
     public void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add) {

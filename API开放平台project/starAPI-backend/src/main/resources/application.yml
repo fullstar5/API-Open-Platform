@@ -35,5 +35,15 @@ mybatis-plus:
 
 starapi:
   client:
-    access-key: star
-    secret-key: 1234
+    access-key: 03fac1610428bfb852b8a7eb94c8dd26
+    secret-key: b118c6e23c4dca454de5f3a132e9964f
+
+dubbo:
+  application:
+    name: dubbo-springboot-demo-provider
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    id: zk-registry
+    address: nacos://localhost:8848

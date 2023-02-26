@@ -2,7 +2,6 @@ package com.star.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.google.gson.Gson;
 import com.star.project.annotation.AuthCheck;
 import com.star.project.common.*;
 import com.star.project.constant.CommonConstant;
@@ -11,11 +10,10 @@ import com.star.project.exception.BusinessException;
 import com.star.project.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import com.star.project.model.dto.userInterfaceInfo.UserInterfaceInfoQueryRequest;
 import com.star.project.model.dto.userInterfaceInfo.UserInterfaceInfoUpdateRequest;
-import com.star.project.model.entity.UserInterfaceInfo;
-import com.star.project.model.entity.User;
 import com.star.project.service.UserInterfaceInfoService;
 import com.star.project.service.UserService;
-import com.star.starapiclientsdk.client.StarApiClient;
+import com.star.starApiCommon.model.entity.User;
+import com.star.starApiCommon.model.entity.UserInterfaceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -26,9 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- * 帖子接口
+ * 接口管理
  *
- * @author yifei
+ * @author yupi
  */
 @RestController
 @RequestMapping("/userInterfaceInfo")
@@ -41,10 +39,8 @@ public class UserInterfaceInfoController {
     @Resource
     private UserService userService;
 
-    @Resource
-    private StarApiClient starApiClient;
-
     // region 增删改查
+
     /**
      * 创建
      *
@@ -110,7 +106,7 @@ public class UserInterfaceInfoController {
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUserInterfaceInfo(@RequestBody UserInterfaceInfoUpdateRequest userInterfaceInfoUpdateRequest,
-                                            HttpServletRequest request) {
+                                                         HttpServletRequest request) {
         if (userInterfaceInfoUpdateRequest == null || userInterfaceInfoUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -174,8 +170,8 @@ public class UserInterfaceInfoController {
      * @param request
      * @return
      */
-    @GetMapping("/list/page")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @GetMapping("/list/page")
     public BaseResponse<Page<UserInterfaceInfo>> listUserInterfaceInfoByPage(UserInterfaceInfoQueryRequest userInterfaceInfoQueryRequest, HttpServletRequest request) {
         if (userInterfaceInfoQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -196,7 +192,6 @@ public class UserInterfaceInfoController {
         Page<UserInterfaceInfo> userInterfaceInfoPage = userInterfaceInfoService.page(new Page<>(current, size), queryWrapper);
         return ResultUtils.success(userInterfaceInfoPage);
     }
-
 
     // endregion
 

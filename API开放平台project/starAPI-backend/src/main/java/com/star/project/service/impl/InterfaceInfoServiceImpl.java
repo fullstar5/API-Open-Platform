@@ -3,10 +3,9 @@ package com.star.project.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.project.common.ErrorCode;
 import com.star.project.exception.BusinessException;
-import com.star.project.model.entity.InterfaceInfo;
 import com.star.project.mapper.InterfaceInfoMapper;
 import com.star.project.service.InterfaceInfoService;
-import org.apache.commons.lang3.ObjectUtils;
+import com.star.starApiCommon.model.entity.InterfaceInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 

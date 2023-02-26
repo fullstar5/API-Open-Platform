@@ -2,10 +2,10 @@ package com.star.project.aop;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.star.project.common.ErrorCode;
-import com.star.project.model.entity.User;
 import com.star.project.annotation.AuthCheck;
 import com.star.project.exception.BusinessException;
 import com.star.project.service.UserService;
+import com.star.starApiCommon.model.entity.User;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

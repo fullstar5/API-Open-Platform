@@ -2,7 +2,7 @@ package com.star.project.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.project.model.entity.User;
+import com.star.starApiCommon.model.entity.User;
 
 import javax.servlet.http.HttpServletRequest;
 

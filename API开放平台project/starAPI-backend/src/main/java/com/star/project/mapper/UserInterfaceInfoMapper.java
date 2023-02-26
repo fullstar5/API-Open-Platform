@@ -1,7 +1,7 @@
 package com.star.project.mapper;
 
-import com.star.project.model.entity.UserInterfaceInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.star.starApiCommon.model.entity.UserInterfaceInfo;
 
 /**
 * @author Administrator

@@ -1,8 +1,7 @@
 package com.star.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.project.model.entity.InterfaceInfo;
-import com.star.project.model.entity.Post;
+import com.star.starApiCommon.model.entity.InterfaceInfo;
 
 /**
 * @author Administrator
@@ -12,5 +11,6 @@ import com.star.project.model.entity.Post;
 public interface InterfaceInfoService extends IService<InterfaceInfo> {
 
     void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean add);
+
 
 }
